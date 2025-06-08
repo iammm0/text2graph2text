@@ -10,8 +10,8 @@ dependencies:
   - pytorch=2.0.1
   - torchvision
   - torchaudio
-  - pytorch-cuda=11.8  # 自动装好CUDA支持
-  - pyg  # PyTorch Geometric（图神经核心库）
+  - pytorch-cuda=11.8
+  - pyg
   - numpy=1.26.4
   - pandas
   - scikit-learn
@@ -24,6 +24,7 @@ dependencies:
   - tqdm
   - pip
   - pip:
+      - torch-geometric
       - transformers==4.36.2
       - sentence-transformers
       - faiss-cpu
@@ -34,6 +35,3 @@ dependencies:
       - pyvis==0.3.1
       - jinja2
       - langdetect
-      - spacy
-      - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
-        - https://github.com/explosion/spacy-models/releases/download/zh_core_web_sm-3.7.1/zh_core_web_sm-3.7.1-py3-none-any.whl
