@@ -1,182 +1,137 @@
-# 基于图神经网络的语义结构生成与循环建模研究
-# （TGT + GNN + 对比学习）
+# text2graph2text 模型实验项目
 
-建议`Python`版本:`3.11`
+**text2graph2text** 是一个基于 GPT 和图神经网络 (GNN) 的循环式 Text→Graph→Text 微调框架，旨在将文本信息结构化为图，利用图结构进行增强编码，再生成高质量文本。该项目包含数据处理、模型训练、评估与可视化等完整实验流程，最终产出一个可在 Hugging Face 发布的微调模型。
 
-建议包管理与虚拟环境：`conda`
+---
 
-总目标：本研究旨在构建一个融合**语言生成与结构学习**的人工智能系统，通过 **Text-Graph-Text 循环机制**、**图注意力建模**与**对比学习优化**，实现面向多实体语义聚类的知识结构智能表达与可解释生成。
+## 模型结构
+![text2graph2text-model](\public\model_structure.png)
+---
 
-```markdown
-[用户 Prompt]
-      ↓
-  [GPT 扩展文本]（1）
-      ↓
-[Text → Graph 模块]（2） ←———[图增强 & 对比学习]
-      ↓
- [Graph Transformer 架构]（3）
-      ↓
-[Graph → Text 反哺]（3）
-      ↓                            
-[用户选节点]（4） ————————————————————————————→ 回到最上方（1）
+## 目录结构
+
+```
+text2graph2text/                  # 项目根目录
+├── environment.yml               # Conda 环境定义
+├── notebooks/                    # Jupyter 实验与可视化笔记
+│   └── 01_data_processing.ipynb
+│   └── 02_model_training.ipynb
+│   └── 03_evaluation.ipynb
+├── src/                          # 代码实现
+│   ├── __init__.py
+│   ├── data_loader.py            # 数据集加载与预处理
+│   ├── graph_builder.py          # 文本→图转换逻辑
+│   ├── gnn_model.py              # GNN 网络结构定义
+│   ├── gpt_finetune.py           # GPT 微调脚本
+│   ├── trainer.py                # 训练循环与日志管理
+│   ├── evaluator.py              # 评估与指标计算
+│   └── utils.py                  # 通用工具函数
+├── config/                       # 参数配置
+│   └── config.yaml               # 数据路径、超参等
+├── data/                         # 原始与中间数据
+│   ├── raw/                      # 原始文本语料
+│   └── processed/                # 转换后的图数据
+├── outputs/                      # 实验结果与模型权重
+│   ├── logs/                     # TensorBoard 日志 & checkpoint
+│   └── models/                   # 最终微调模型文件
+└── README.md                     # 本文件
 ```
 
+---
 
+## 环境配置
 
-## 1.Text → Graph → Text 循环机制
+使用 Conda 构建统一的实验环境：
 
-目标：构建一个双向可控系统，用自然语言生成知识图谱，再通过图谱结构反向生成语义文本。形成语言与结构之间的**可逆变换循环**。
+```bash
+conda env create -f environment.yml      # 首次创建
+conda env update -f environment.yml --prune  # 更新已有环境
+conda activate text2graph2text
+```
 
-### 任务拆解：
+### environment.yml 核心依赖
 
-| 子任务       | 描述                                                         |
-| ------------ | ------------------------------------------------------------ |
-| 文本→图      | 通过 NER + RE 或 LLM 提示模板，抽取实体和关系                |
-| 图→文本      | Graph2Text 模块，基于结构生成连贯的自然语言                  |
-| 循环控制机制 | 控制文本生成不重复、不离题，图扩展有节制                     |
-| 节点跟踪机制 | 保留“已探索/未探索”状态，防止 GPT 毫无节制地胡言乱语         |
-| 多轮结构记忆 | 保证上下文语义一致性，甚至引入 embedding-based history tracker |
+```yaml
+name: text2graph2text
+channels:
+  - nvidia
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch=2.1.0
+  - torchvision=0.16.0
+  - torchaudio=2.1.0
+  - pytorch-cuda=11.8
+  - pyg-lib
+  - pyg-sparse
+  - pyg-scatter
+  - torch-geometric=2.4.0
+  - numpy>=1.26,<2.0
+  - pandas
+  - scikit-learn
+  - networkx
+  - spacy
+  - nltk
+  - jupyterlab
+  - matplotlib
+  - tqdm
+  - pip
+  - pip:
+      - transformers>=4.39
+      - sentence-transformers
+      - diffusers
+      - datasets
+      - faiss-cpu
+      - accelerate
+      - deepspeed
+      - wandb
+      - python-dotenv
+      - jinja2
+      - langdetect
+```
 
-### 实验标准：
+---
 
-（1）Text1→Graph→Text2 与 Text1 相似度
+## 快速开始
 
-（2）Graph1→Text→Graph2 的结构一致性
+1. **启动 Jupyter**
 
-（3）内容丰富度（扩展内容的独特性与合理性）
+   ```bash
+   jupyter lab
+   ```
+2. **数据预处理**
 
-（4）可读性 + 语义是否通顺
+   * 编辑 `config/config.yaml`，设置数据路径与超参
+   * 在 `notebooks/01_data_processing.ipynb` 中运行并生成 `data/processed/` 图数据
+3. **模型训练**
 
+   ```bash
+   python src/trainer.py --config config/config.yaml
+   ```
 
+   * 日志保存在 `outputs/logs/`，模型 checkpoint 存于 `outputs/models/`
+4. **评估与可视化**
 
-## 2.Graph Transformer 多关系结构建模
+   ```bash
+   python src/evaluator.py --config config/config.yaml
+   ```
 
-目标：使用 Transformer 架构取代传统 GCN/GAT，使模型能够处理**多跳、多类型、异构关系的复杂图结构**。
+   * 运行 `notebooks/03_evaluation.ipynb` 生成指标报告与可视化图表
+5. **导出模型**
 
-### 任务拆解：
+   ```bash
+   # 导出至 Hugging Face 格式
+   python src/gpt_finetune.py --export outputs/models/finetuned_model
+   ```
 
-| 子任务         | 描述                                                         |
-| -------------- | ------------------------------------------------------------ |
-| 节点表示初始化 | 结合实体类型、上下文向量等多维度输入初始化 node embedding    |
-| 边类型建模     | 为每类关系分配可学习的边类型 embedding（Relation-aware Attention） |
-| 注意力路径建模 | 使用全局注意力机制替代局部聚合，建模远程依赖                 |
-| 多跳语义表达   | 引入 positional bias 或 relational encoding，增强上下文图谱深度理解能力 |
+---
 
-### 实验标准：
+## 实验记录
 
-（1）对比三种模型的性能（GraphSAGE / GAT / Graphormer）
+* Jupyter 笔记保存在 `notebooks/`，请按顺序执行：
 
-（2）关系泛化测试，新的测试集能否做到关系泛化
-
-（3）结构可视化：Attention 权重可视化验证是否有语义聚焦能力
-
-
-
-## 3.GNN 中的对比学习（Contrastive Learning）
-
-目标：提升图嵌入质量，增强结构判别力。通过构造正负样本对训练模型：拉近相关节点（正样本），远离无关节点（负样本）。
-
-### 任务拆解：
-
-| 子任务       | 描述                                                         |
-| ------------ | ------------------------------------------------------------ |
-| 样本对构建   | 定义正样本对（同主题子图、上下位概念等）与负样本对（无直接语义关联） |
-| 图增强策略   | 通过子图抽样、边扰动等构造不同视图                           |
-| 对比损失函数 | 用 InfoNCE / NT-Xent 损失函数训练 GNN                        |
-| 嵌入空间评估 | 可视化 embedding 分布，聚类质量（Silhouette Score）          |
-
-### 实验标准：
-
-（1）聚类评估指标：NMI / ARI / Silhouette
-
-（2）语义分类任务迁移效果
-
-（3）图扰动鲁棒性测试（结构变动前后相似性）
-
-
-
-## 4.研究工具与技术栈选择
-
-#### （1）主框架选择（模型搭建 + 训练平台）
-
-| 工具                         | 理由                                                         |
-| ---------------------------- | ------------------------------------------------------------ |
-| **PyTorch**                  | 图模型、NLP、LLM、自定义组件最好用的全能王，支持 HuggingFace 和 PyG |
-| **PyTorch Geometric (PyG)**  | 最流行的图神经网络库，适合实验、灵活定制                     |
-| **HuggingFace Transformers** | 用于 GPT 类语言模型生成部分，非常方便地加载大模型            |
-
-#### （2）Text-Graph-Text（TGT）模块技术栈
-
-| 模块                         | 推荐工具                                                     |
-| ---------------------------- | ------------------------------------------------------------ |
-| 文本生成 (Text → GPT)        | **HuggingFace Transformers** + **OpenAI API / LLaMA / Mistral** |
-| 实体识别 / 关系抽取 (NER/RE) | **spaCy + Transformers** or **BERT-NER 模型**                |
-| 图构建                       | 自定义 GraphBuilder 类 + **networkx** 或 **PyG**             |
-| Graph → Text                 | 简单版本用模板生成，高级版本可试 **Graph2Text transformer（BART）** |
-
-#### （3）对比学习模块技术
-
-| 步骤                       | 工具或框架                                          |
-| -------------------------- | --------------------------------------------------- |
-| 图增强（子图采样、边扰动） | PyG 中的 `transform` 模块 or 自定义 GraphAugment 类 |
-| 损失函数（对比损失）       | 实现 InfoNCE / NT-Xent：自己写 or 用 `simCLR` 实现  |
-| 可视化嵌入空间             | t-SNE / UMAP + **matplotlib/seaborn/plotly**        |
-| 嵌入存储与检索             | 用 **FAISS** 做向量检索系统（可选）                 |
-
-#### （4）Graph Transformer 技术支持
-
-| 架构                  | 资源                                                         |
-| --------------------- | ------------------------------------------------------------ |
-| **Graphormer**        | 官方代码 [Graphormer GitHub](https://github.com/microsoft/Graphormer) 可复用 |
-| **SAN / GATv2 / GTN** | PyG 提供模块接口直接调                                       |
-| **多关系图支持**      | 自定义 EdgeTypeEmbedding + Relation-aware attention（有论文参考） |
-
-#### （5）可视化与交互技术
-
-| 工具                          | 作用                                      |
-| ----------------------------- | ----------------------------------------- |
-| **React + Next.js**           | 你已经在用，很适合构建前端交互            |
-| **Cytoscape.js / D3.js**      | 最常见的图谱可视化工具，2D 展示可定制样式 |
-| **Three.js + force-graph-3d** | 想上 3D 交互的？这个够用（但GPU拉满）     |
-| **Vis.js**                    | 用得少但适配性好，适合移动端图可视化      |
-| **Framer Motion**             | 让你的 UI 看起来像不是你手写的（你懂的）  |
-
-
-
-## 5.理论知识与技术储备
-
-（1）需要深入理解的理论（能讲清楚能手推）
-
-| 模块                   | 内容                                                    | 建议掌握程度                       |
-| ---------------------- | ------------------------------------------------------- | ---------------------------------- |
-| GNN 基础原理           | GCN / GAT / message passing / 聚合函数                  | 会推公式、理解图卷积               |
-| Graph Transformer      | attention on graphs / structural bias / edge encoding   | 能讲清和传统GNN区别，理解层级机制  |
-| 对比学习               | contrastive loss, InfoNCE, positive/negative sample构建 | 能自己实现 & 解释优化目标          |
-| 嵌入空间建模           | 向量空间距离/语义嵌入/相似性计算                        | 理解“向量相近意味着语义相近”的假设 |
-| Text-to-Graph 信息抽取 | NER / RE / dependency parsing                           | 理解抽取逻辑、错误来源、边界问题   |
-| 图嵌入可解释性         | attention可视化、节点/边重要性解释                      | 写论文时能解释模型行为             |
-
-（2）需要掌握使用方法的技术工具（会用就行）
-
-| 模块         | 工具                                  | 建议掌握程度                           |
-| ------------ | ------------------------------------- | -------------------------------------- |
-| GPT 文本生成 | HuggingFace transformers / OpenAI API | 会调 API，会处理 prompt / output 就行  |
-| 图谱可视化   | Cytoscape.js / D3.js / GraphVis       | 能接上数据，调成不丑，响应点击事件     |
-| NER 工具     | spaCy / BERT-NER                      | 会调用、能训练简单数据、会修正结果即可 |
-| 对比学习库   | GraphCL / GRACE / SimGRACE            | 会用开源实现 + 能替换你的数据          |
-| 图数据处理   | networkx / PyG 数据格式               | 会构建图结构 + 节点/边属性注入即可     |
-| Web 前端交互 | Next.js / React                       | 会改前端界面、响应交互、调后端接口     |
-| 训练监控     | Weights & Biases                      | 会记录 loss / acc，会看日志图线图即可  |
-| 文献管理     | Zotero / Mendeley                     | 会分类标注你的参考文献就行（论文必备） |
-
-
-
-## 6.时间安排
-
-| 阶段                          | 时间       | 重点                                                   |
-| ----------------------------- | ---------- | ------------------------------------------------------ |
-|第一阶段：摸清底子          | 第1-2个月  | 跑通 Text→Graph 的流程，理解 GNN 机制，列出所需模块    |
-|第二阶段：理论研究          | 第3-6个月  | 深入 Graph Transformer、对比学习，写背景综述，开题报告 |
-|第三阶段：模型实现          | 第6-9个月  | 完成 GrowNet 框架核心代码，实现 TGT 和训练模块         |
-|第四阶段：系统集成 + 测试   | 第9-11个月 | 集成前端交互、可视化、数据处理与用户交互反馈模块       |
-|第五阶段：写论文 + 答辩准备 | 第12个月   | 写主论文、开展示页面、准备展示视频或Demo演示           |
+  1. `01_data_processing.ipynb`  —— 数据清洗与图构建
+  2. `02_model_training.ipynb`   —— 微调脚本与超参搜索
+  3. `03_evaluation.ipynb`       —— 结果评估与比较对照
