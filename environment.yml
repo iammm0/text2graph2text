@@ -1,37 +1,90 @@
-name: grownet
+name: text2graph2text
 channels:
-  - nvidia
-  - pytorch
-  - pyg
-  - conda-forge
+  - nvidia          # CUDA 支持
+  - pytorch         # PyTorch 官方包
+  - conda-forge     # 科学计算常用包
   - defaults
+
 dependencies:
-  - python=3.11
-  - pytorch=2.0.1
-  - torchvision
-  - torchaudio
-  - pytorch-cuda=11.8
-  - pyg
-  - numpy=1.26.4
-  - pandas
+  # —— 1) 基础语言 & CUDA —— #
+  - python=3.10
+  - pip
+  - cudatoolkit=11.8
+
+  # —— 2) 深度学习框架 —— #
+  - pytorch=2.1.0
+  - torchvision=0.16.0
+  - torchaudio=2.1.0
+  - accelerate=0.23.0           # Hugging Face 加速器
+  - deepspeed=0.10.2            # 可选：大规模训练
+
+  # —— 3) 图神经网络 & 传统 ML —— #
+  - pyg-lib                     # PyG 核心库
+  - pyg-scatter
+  - pyg-sparse
+  - torch-geometric=2.4.0
   - scikit-learn
   - networkx
-  - spacy
-  - nltk
-  - jupyterlab
+
+  # —— 4) 科学计算 & 数据处理 —— #
+  - numpy=1.26.4                # <2.0 保持兼容
+  - pandas
+  - pyarrow                     # 快速序列化
+  - scipy
   - matplotlib
   - seaborn
   - tqdm
-  - pip
+
+  # —— 5) 自然语言处理基础 —— #
+  - spacy
+  - nltk
+  - sentencepiece
+
+  # —— 6) 交互式 & 可视化 —— #
+  - jupyterlab
+  - ipywidgets
+  - pyvis=0.3.1
+
+  # —— 7) 代码质量 & 测试 —— #
+  - black
+  - isort
+  - flake8
+  - mypy
+  - pytest
+  - pre-commit
+
+  # —— 8) 其余工具 —— #
+  - python-dotenv
+  - wandb
+
+  # —— 9) 通过 pip 安装 Hugging Face & 其他前沿包 —— #
   - pip:
-      - torch-geometric
-      - transformers==4.36.2
-      - sentence-transformers
+      # 核心：Transformer、RAG、Embedding、Tokenizers
+      - transformers>=4.39,<5.0
+      - datasets>=2.18
+      - tokenizers>=0.14
+      - huggingface-hub>=0.15
+      - evaluate>=0.4
+      - safetensors>=0.3
+
+      # Diffusion & RAG 可视化
+      - diffusers>=0.20
+      - accelerate>=0.23
+      - bitsandbytes>=0.39
+
+      # 向量检索
       - faiss-cpu
-      - wandb
+
+      # 服务 & UI
       - gradio
       - openai
-      - python-dotenv
-      - pyvis==0.3.1
-      - jinja2
+
+      # 模型微调辅助
+      - peft
+      - transformers[torch]    # 确保 Torch 扩展
+
+      # 其它实用包
+      - ftfy
+      - sacrebleu
       - langdetect
+      - jinja2
