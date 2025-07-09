@@ -5,7 +5,7 @@
 ---
 
 ## 模型结构
-![text2graph2text-model](\public\model_structure.png)
+![text2graph2text-model](./public/model_structure.png)
 ---
 
 ## 目录结构
