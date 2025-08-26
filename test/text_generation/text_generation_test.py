@@ -1,4 +1,4 @@
-from text_generation.gpt_module import generate_text
+from text_generation.gpt_module_plus import build_generator_from_CONFIG
 
 user_prompt = ("请描写一位在现代生活背景下，不断在雄心壮志与自我怀疑之间摇摆的年轻男性的心理状态。"
                "他今年22岁，热爱太空、科技与冒险，但时常陷入对自我价值的怀疑和未来方向的迷茫。"
@@ -39,6 +39,23 @@ user_profile = {
     }
 }
 
-long_text = generate_text(user_prompt, user_profile)
+CONFIG = {
+    "gpt": {
+        "model_name": "Qwen/Qwen2-7B-Instruct",
+        "max_new_tokens": 1200,
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "repetition_penalty": 1.08,
+        "device_map": "auto",
+        "torch_dtype": "float16",
+        "quantization": None,
+        "trust_remote_code": True,
+        "stop_words": ["提纲：", "总结：", "正文：", "对话：", "参考文献：", "分析：", "结论："],
+        "stream": False,
+    }
+}
 
-print(long_text)
+generator = build_generator_from_CONFIG(CONFIG)
+
+text = generator.generate_psych_monologue(user_prompt, user_profile, target_tokens=900)
+print(text)

@@ -1,51 +1,44 @@
 name: text2graph2text
 channels:
-  - nvidia          # CUDA 支持
-  - pytorch         # PyTorch 官方包
-  - conda-forge     # 科学计算常用包
+  - pytorch
+  - nvidia
+  - conda-forge
   - defaults
 
 dependencies:
-  # —— 1) 基础语言 & CUDA —— #
+  # 1) Python & 基本工具
   - python=3.10
   - pip
-  - cudatoolkit=11.8
 
-  # —— 2) 深度学习框架 —— #
-  - pytorch=2.1.0
-  - torchvision=0.16.0
-  - torchaudio=2.1.0
-  - huggingface_accelerate          # Hugging Face 加速器
-  - deepspeed=0.10.2            # 可选：大规模训练
+  # 2) PyTorch + 官方 CUDA 元包（不要再写 cudatoolkit）
+  - pytorch=2.3.1
+  - torchvision=0.18.1
+  - torchaudio=2.3.1
+  - pytorch-cuda=12.1            # 仅限有 NVIDIA GPU；CPU-only 环境请删除这一行
 
-  # —— 3) 图神经网络 & 传统 ML —— #
-  - pyg-lib                     # PyG 核心库
-  - pyg-scatter
-  - pyg-sparse
-  - torch-geometric=2.4.0
-  - scikit-learn
-  - networkx
-
-  # —— 4) 科学计算 & 数据处理 —— #
-  - numpy=1.26.4                # <2.0 保持兼容
+  # 3) 科学计算 & 数据处理
+  - numpy=1.26.*                 # 与部分包更兼容
   - pandas
-  - pyarrow                     # 快速序列化
+  - pyarrow
   - scipy
+  - scikit-learn
   - matplotlib
   - seaborn
   - tqdm
+  - networkx
+  - faiss-cpu                    # Windows 下用 conda-forge 版本，pip 的轮子多为 Linux
 
-  # —— 5) 自然语言处理基础 —— #
+  # 4) NLP 基础
   - spacy
   - nltk
   - sentencepiece
 
-  # —— 6) 交互式 & 可视化 —— #
+  # 5) 交互 & 可视化
   - jupyterlab
   - ipywidgets
   - pyvis=0.3.1
 
-  # —— 7) 代码质量 & 测试 —— #
+  # 6) 代码质量 & 测试
   - black
   - isort
   - flake8
@@ -53,38 +46,27 @@ dependencies:
   - pytest
   - pre-commit
 
-  # —— 8) 其余工具 —— #
+  # 7) 其它常用
   - python-dotenv
   - wandb
+  - openssl
+  - ca-certificates
 
-  # —— 9) 通过 pip 安装 Hugging Face & 其他前沿包 —— #
+  # 8) 通过 pip 安装的前沿/快速更新包
   - pip:
-      # 核心：Transformer、RAG、Embedding、Tokenizers
-      - transformers>=4.39,<5.0
+      - transformers>=4.43.0
+      - tokenizers>=0.15.2
+      - accelerate>=0.29.0
+      - huggingface-hub>=0.23.0
       - datasets>=2.18
-      - tokenizers>=0.14
-      - huggingface-hub>=0.15
       - evaluate>=0.4
       - safetensors>=0.3
-
-      # Diffusion & RAG 可视化
+      - tiktoken>=0.7.0
       - diffusers>=0.20
-      - accelerate>=0.23
-      - bitsandbytes>=0.39
-
-      # 向量检索
-      - faiss-cpu
-
-      # 服务 & UI
       - gradio
       - openai
-
-      # 模型微调辅助
       - peft
-      - transformers[torch]    # 确保 Torch 扩展
-
-      # 其它实用包
-      - ftfy
-      - sacrebleu
+      - rich
       - langdetect
-      - jinja2
+      - spacy
+      - hf_xet
