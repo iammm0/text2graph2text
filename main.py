@@ -1,3 +1,5 @@
+"""NeuroWeave 主流程脚本"""
+
 import torch
 from torch_geometric.data import Data, DataLoader
 
@@ -10,9 +12,11 @@ from src.graph_transformer import GraphEncoder
 from src.graph_visualizer import visualize_graph
 from src.ner_extraction import extract_entities_and_relations_gpt
 from src.train_contrastive import train_contrastive_epoch
+from src.config import CONFIG
 
 
 def main():
+    """执行完整的文本→图→文本流程"""
     print("🎉 NeuroWeave 启动：文本-图谱智能生成系统")
 
     # ========== Step 1: 用户输入 ==========
@@ -51,7 +55,14 @@ def main():
     ], dtype=torch.long)
 
     data = Data(x=x, edge_index=edge_index)
-    model = GraphEncoder(in_channels=num_nodes, hidden_channels=32, out_channels=16)
+
+    # 根据配置构建图编码器
+    model = GraphEncoder(
+        in_channels=num_nodes,
+        hidden_channels=CONFIG["graph_encoder"]["hidden_channels"],
+        out_channels=CONFIG["graph_encoder"]["out_channels"],
+        heads=CONFIG["graph_encoder"].get("heads", 2),
+    )
     embeddings = model(data.x, data.edge_index)
     print("🧠 得到节点语义嵌入，shape:", embeddings.shape)
 
@@ -82,11 +93,13 @@ def main():
     print("\n🚀 Step 7: 图嵌入对比训练")
     if num_nodes >= 2:
         loader = DataLoader([data, data], batch_size=2)
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.005)
 
-        for epoch in range(10):
+        # 根据配置设置学习率与训练轮数
+        optimizer = torch.optim.Adam(model.parameters(), lr=CONFIG["training"]["lr"])
+
+        for epoch in range(CONFIG["training"]["epochs"]):
             epoch_loss = train_contrastive_epoch(model, loader, optimizer)
-            print(f"Epoch {epoch+1}: contrastive loss = {epoch_loss:.4f}")
+            print(f"Epoch {epoch + 1}: contrastive loss = {epoch_loss:.4f}")
     else:
         print("⚠️ 节点过少，跳过训练流程")
 

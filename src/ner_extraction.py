@@ -1,13 +1,18 @@
+"""实体与关系抽取模块"""
+
 import spacy
 from langdetect import detect
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
+import json
+from src.config import CONFIG
 
-# 延迟加载（只加载一次）
+# 延迟加载的 spaCy 模型缓存
 _spacy_models = {}
 
 
-def get_nlp(text):
+def get_nlp(text: str):
+    """根据文本语言动态加载对应的 spaCy 模型"""
     lang = detect(text)
     if lang.startswith("zh"):
         model_name = "zh_core_web_sm"
@@ -20,12 +25,13 @@ def get_nlp(text):
     return _spacy_models[model_name]
 
 
-import os
-import json
+# 初始化 OpenAI 客户端
+client = OpenAI(api_key=CONFIG["openai"]["api_key"])
 
-client = OpenAI(api_key="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")
 
-def extract_entities_and_relations_gpt(text):
+def extract_entities_and_relations_gpt(text: str) -> dict:
+    """调用 GPT 模型抽取实体及其关系"""
+
     system_prompt = (
         "You are a knowledge structure extraction agent. "
         "Given a paragraph of English text, extract key conceptual entities and their semantic relationships. "
@@ -52,11 +58,11 @@ Please output a valid JSON in the following format:
     try:
         messages: list[ChatCompletionMessageParam] = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
+            {"role": "user", "content": user_prompt},
         ]
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=CONFIG["openai"]["model_name"],
             messages=messages,
             temperature=0.2,
         )
@@ -73,8 +79,9 @@ Please output a valid JSON in the following format:
         return {"nodes": [], "edges": []}
 
 
-
 def extract_entities_and_relations(text: str) -> dict:
+    """使用传统 NLP 抽取实体及共现关系"""
+
     nlp = get_nlp(text)
     doc = nlp(text)
     nodes = []
@@ -84,18 +91,17 @@ def extract_entities_and_relations(text: str) -> dict:
         nodes.append({
             "id": str(ent_id),
             "label": ent.text,
-            "type": ent.label_
+            "type": ent.label_,
         })
 
     for i in range(len(nodes)):
         for j in range(i + 1, len(nodes)):
-            edges.append({
-                "from": nodes[i]["id"],
-                "to": nodes[j]["id"],
-                "label": "共现"
-            })
+            edges.append(
+                {
+                    "from": nodes[i]["id"],
+                    "to": nodes[j]["id"],
+                    "label": "共现",
+                }
+            )
 
-    return {
-        "nodes": nodes,
-        "edges": edges
-    }
+    return {"nodes": nodes, "edges": edges}
