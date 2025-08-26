@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 from torch_geometric.data import Data
-from src.config import CONFIG
+from config.config import CONFIG
 
 
 class GraphEncoder(nn.Module):

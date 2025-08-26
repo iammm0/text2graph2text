@@ -15,7 +15,7 @@ dependencies:
   - pytorch=2.1.0
   - torchvision=0.16.0
   - torchaudio=2.1.0
-  - accelerate=0.23.0           # Hugging Face 加速器
+  - huggingface_accelerate          # Hugging Face 加速器
   - deepspeed=0.10.2            # 可选：大规模训练
 
   # —— 3) 图神经网络 & 传统 ML —— #

@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn.functional as F
-from src.config import CONFIG
+from config.config import CONFIG
 
 
 def nt_xent_loss(z_i, z_j, temperature: float | None = None) -> torch.Tensor:

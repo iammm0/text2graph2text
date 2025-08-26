@@ -1,10 +1,7 @@
 gpt:
-  model_name: gpt2
+  model_name: uer/gpt2-chinese-cluecorpussmall
   max_new_tokens: 100
   temperature: 1.0
-openai:
-  api_key: "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"
-  model_name: gpt-3.5-turbo
 graph_encoder:
   hidden_channels: 32
   out_channels: 16
